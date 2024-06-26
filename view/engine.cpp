@@ -73,6 +73,15 @@ void Engine::make_swapchain() {
 	swapchainExtent = bundle.extent;
 	maxFramesInFlight = static_cast<int>(swapchainFrames.size());
 
+
+	for (auto& frame : swapchainFrames) {
+		frame.logicalDevice = device;
+		frame.physicalDevice = physicalDevice;
+		frame.width = swapchainExtent.width;
+		frame.height = swapchainExtent.height;
+
+		frame.make_depth_resources();
+	}
 }
 
 /**
@@ -134,6 +143,7 @@ void Engine::make_pipeline() {
 	specification.fragmentFilepath = "shaders/fragment.spv";
 	specification.swapchainExtent = swapchainExtent;
 	specification.swapchainImageFormat = swapchainFormat;
+	specification.depthFormat = swapchainFrames[0].depthFormat;
 	specification.descriptorSetLayouts = { frameDescriptorSetLayout, meshDescriptorSetLayout };
 
 	vkInit::GraphicsPipelineOutBundle output = vkInit::create_graphics_pipeline(
@@ -178,7 +188,7 @@ void Engine::make_frame_resources() {
 		frame.renderFinished = vkInit::make_semaphore(device);
 		frame.inFlight = vkInit::make_fence(device);
 
-		frame.make_descriptor_resources(device, physicalDevice);
+		frame.make_descriptor_resources();
 
 		frame.descriptorSet = vkInit::allocate_descriptor_set(device, frameDescriptorPool, frameDescriptorSetLayout);
 	}
@@ -196,7 +206,7 @@ void Engine::finalize_setup() {
 	vkInit::make_frame_command_buffers(commandBufferInput);
 
 	make_frame_resources();
-
+	
 }
 
 void Engine::make_assets() {
@@ -204,52 +214,54 @@ void Engine::make_assets() {
 	meshes = new VertexMenagerie();
 
 	std::vector<float> vertices = { {
-		 0.0f, -0.1f, 0.0f, 1.0f, 0.0f, 0.5f, 0.0f,
-		 0.1f, 0.1f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-		-0.1f, 0.1f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
+		 0.0f, -0.1f, 0.0f, 1.0f, 0.0f, 0.5f, 0.0f, //0
+		 0.1f, 0.1f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,  // 1
+		-0.1f, 0.1f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f   // 2
+	} };
+	std::vector<uint32_t> indices = { {
+			0, 1, 2
 	} };
 	meshTypes type = meshTypes::TRIANGLE;
-	meshes->consume(type, vertices);
+	meshes->consume(type, vertices, indices);
 	
 	vertices = { {
-		-0.1f,  0.1f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-		-0.1f, -0.1f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-		 0.1f, -0.1f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-		 0.1f, -0.1f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-		 0.1f,  0.1f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-		-0.1f,  0.1f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f
+		-0.1f,  0.1f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,	// 0
+		-0.1f, -0.1f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// 1
+		 0.1f, -0.1f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,	// 2
+		 0.1f,  0.1f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	// 3
 	} };
+	indices = { {
+			0, 1, 2, 
+			2, 3, 0
+	} };
+
 	type = meshTypes::SQUARE;
-	meshes->consume(type, vertices);
+	meshes->consume(type, vertices, indices);
 
 	vertices = { {
-		-0.1f, -0.05f, 0.0f, 0.0f, 1.0f, 0.0f, 0.25f,
-		-0.04f, -0.05f, 0.0f, 0.0f, 1.0f, 0.3f, 0.25f,
-		-0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.2f,  0.5f,
-		-0.04f, -0.05f, 0.0f, 0.0f, 1.0f, 0.3f, 0.25f,
-		  0.0f,  -0.1f, 0.0f, 0.0f, 1.0f, 0.5f,  0.0f,
-		 0.04f, -0.05f, 0.0f, 0.0f, 1.0f, 0.7f, 0.25f,
-		-0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.2f,  0.5f,
-		-0.04f, -0.05f, 0.0f, 0.0f, 1.0f, 0.3f, 0.25f,
-		 0.04f, -0.05f, 0.0f, 0.0f, 1.0f, 0.7f, 0.25f,
-		 0.04f, -0.05f, 0.0f, 0.0f, 1.0f, 0.7f, 0.25f,
-		  0.1f, -0.05f, 0.0f, 0.0f, 1.0f, 1.0f, 0.25f,
-		 0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.8f,  0.5f,
-		-0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.2f,  0.5f,
-		 0.04f, -0.05f, 0.0f, 0.0f, 1.0f, 0.7f, 0.25f,
-		 0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.8f,  0.5f,
-		 0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.8f,  0.5f,
-		 0.08f,   0.1f, 0.0f, 0.0f, 1.0f, 0.9f,  1.0f,
-		  0.0f,  0.02f, 0.0f, 0.0f, 1.0f, 0.5f,  0.6f,
-		-0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.2f,  0.5f,
-		 0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.8f,  0.5f,
-		  0.0f,  0.02f, 0.0f, 0.0f, 1.0f, 0.5f,  0.6f,
-		-0.06f,   0.0f, 0.0f, 0.0f, 1.0f, 0.2f,  0.5f,
-		  0.0f,  0.02f, 0.0f, 0.0f, 1.0f, 0.5f,  0.6f,
-		-0.08f,   0.1f, 0.0f, 0.0f, 1.0f, 0.1f,  1.0f
+		-0.1f, -0.05f, 1.0f, 1.0f, 1.0f, 0.0f, 0.25f, //0
+		-0.04f, -0.05f, 1.0f, 1.0f, 1.0f, 0.3f, 0.25f, //1
+		-0.06f,   0.0f, 1.0f, 1.0f, 1.0f, 0.2f,  0.5f, //2
+		  0.0f,  -0.1f, 1.0f, 1.0f, 1.0f, 0.5f,  0.0f, //3
+		 0.04f, -0.05f, 1.0f, 1.0f, 1.0f, 0.7f, 0.25f, //4
+		  0.1f, -0.05f, 1.0f, 1.0f, 1.0f, 1.0f, 0.25f, //5
+		 0.06f,   0.0f, 1.0f, 1.0f, 1.0f, 0.8f,  0.5f, //6
+		 0.08f,   0.1f, 1.0f, 1.0f, 1.0f, 0.9f,  1.0f, //7
+		  0.0f,  0.02f, 1.0f, 1.0f, 1.0f, 0.5f,  0.6f, //8
+		-0.08f,   0.1f, 1.0f, 1.0f, 1.0f, 0.1f,  1.0f  //9
+	} };
+	indices = { {
+			0, 1, 2,
+			1, 3, 4,
+			2, 1, 4,
+			4, 5, 6,
+			2, 4, 6,
+			6, 7, 8,
+			2, 6, 8,
+			2, 8, 9,
 	} };
 	type = meshTypes::STAR;
-	meshes->consume(type, vertices);
+	meshes->consume(type, vertices, indices);
 
 	vertexBufferFinalizationChunk finalizationInfo;
 	finalizationInfo.logicalDevice = device;
@@ -290,6 +302,7 @@ void Engine::prepare_scene(vk::CommandBuffer commandBuffer) {
 	vk::Buffer vertexBuffers[] = {meshes->vertexBuffer.buffer};
 	vk::DeviceSize offsets[] = { 0 };
 	commandBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+	commandBuffer.bindIndexBuffer(meshes->indexBuffer.buffer, 0, vk::IndexType::eUint32);
 }
 
 void Engine::prepare_frame(uint32_t imageIndex, Scene* scene)
@@ -330,7 +343,7 @@ void Engine::prepare_frame(uint32_t imageIndex, Scene* scene)
 
 	memcpy(_frame.modelBufferWriteLocation, _frame.modelTransforms.data(), i * sizeof(glm::mat4));
 
-	_frame.write_descriptor_set(device);
+	_frame.write_descriptor_set();
 }
 
 void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imageIndex, Scene* scene) {
@@ -352,8 +365,13 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 	renderPassInfo.renderArea.extent = swapchainExtent;
 
 	vk::ClearValue clearColor = { std::array<float, 4>{1.0f, 0.5f, 0.25f, 1.0f} };
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
+	vk::ClearValue clearDepth;
+	clearDepth.depthStencil = vk::ClearDepthStencilValue({ 1.0f, 0 });
+
+	std::vector<vk::ClearValue> clearValues = { { clearColor, clearDepth } };
+
+	renderPassInfo.clearValueCount = clearValues.size();
+	renderPassInfo.pClearValues = clearValues.data();
 
 	commandBuffer.beginRenderPass(&renderPassInfo, vk::SubpassContents::eInline);
 
@@ -393,11 +411,11 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 
 void Engine::render_objects(vk::CommandBuffer commandBuffer, meshTypes objectType, uint32_t& startInstance, uint32_t instanceCount)
 {
-	int vertexCount = meshes->sizes.find(objectType)->second;
-	int firstVertex = meshes->offsets.find(objectType)->second;
+	int indexCount = meshes->indexCounts.find(objectType)->second;
+	int firstIndex = meshes->firstIndices.find(objectType)->second;
 	materials[objectType]->use(commandBuffer, pipelineLayout);
 
-	commandBuffer.draw(vertexCount, instanceCount, firstVertex, startInstance);
+	commandBuffer.drawIndexed(indexCount, instanceCount, firstIndex, 0, startInstance);
 	startInstance += instanceCount;
 }
 
@@ -493,20 +511,8 @@ void Engine::render(Scene* scene) {
 */
 void Engine::cleanup_swapchain() {
 
-	for (vkUtil::SwapChainFrame frame : swapchainFrames) {
-		device.destroyImageView(frame.imageView);
-		device.destroyFramebuffer(frame.framebuffer);
-		device.destroyFence(frame.inFlight);
-		device.destroySemaphore(frame.imageAvailable);
-		device.destroySemaphore(frame.renderFinished);
-		
-		device.unmapMemory(frame.cameraDataBuffer.bufferMemory);
-		device.freeMemory(frame.cameraDataBuffer.bufferMemory);
-		device.destroyBuffer(frame.cameraDataBuffer.buffer);
-
-		device.unmapMemory(frame.modelBuffer.bufferMemory);
-		device.freeMemory(frame.modelBuffer.bufferMemory);
-		device.destroyBuffer(frame.modelBuffer.buffer);
+	for (auto& frame : swapchainFrames) {
+		frame.destroy();
 	}
 	device.destroySwapchainKHR(swapchain);
 

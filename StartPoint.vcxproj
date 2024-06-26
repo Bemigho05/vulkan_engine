@@ -169,6 +169,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="view\vkImage\image.cpp" />
     <ClCompile Include="view\vkInit\descriptors.cpp" />
+    <ClCompile Include="view\vkUtil\frame.cpp" />
     <ClCompile Include="view\vkUtil\memory.cpp" />
     <ClCompile Include="model\scene.cpp" />
     <ClCompile Include="view\vkUtil\single_time_commands.cpp" />

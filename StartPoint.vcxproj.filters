@@ -45,6 +45,9 @@
     <ClCompile Include="view\vkInit\descriptors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\vkUtil\frame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="view\engine.h">

@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vulkan_engine", "StartPoint.vcxproj", "{0B8CA44C-38BD-4DAE-B350-F3E9BB33F8B7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "other", "..\other\other.vcxproj", "{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -23,14 +21,6 @@ Global
 		{0B8CA44C-38BD-4DAE-B350-F3E9BB33F8B7}.Release|x64.Build.0 = Release|x64
 		{0B8CA44C-38BD-4DAE-B350-F3E9BB33F8B7}.Release|x86.ActiveCfg = Release|Win32
 		{0B8CA44C-38BD-4DAE-B350-F3E9BB33F8B7}.Release|x86.Build.0 = Release|Win32
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Debug|x64.ActiveCfg = Debug|x64
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Debug|x64.Build.0 = Debug|x64
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Debug|x86.ActiveCfg = Debug|Win32
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Debug|x86.Build.0 = Debug|Win32
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Release|x64.ActiveCfg = Release|x64
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Release|x64.Build.0 = Release|x64
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Release|x86.ActiveCfg = Release|Win32
-		{7C05861E-C68D-417B-A9AC-CA0AFAC22D35}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
